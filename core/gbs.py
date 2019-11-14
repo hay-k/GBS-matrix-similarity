@@ -67,37 +67,29 @@ class GBSDevice:
         :param max_photons: maximum number of registered photons in a counting event
         :return: a list of photon counting events. List[List]
         """
-
-        def _expand(pattern: List, expansion_list: List[List]):
+        def _expand(pattern: List):
             if pattern[0] <= pattern[1]:
-                return expansion
+                return []
+            pattern_list = []
             for i in range(1, len(pattern)):
                 b = pattern.copy()
                 b[0] -= 1
                 if b[i] < b[i - 1]:
                     b[i] += 1
-                    # TODO: eliminate the need for this duplication check
-                    if b not in expansion_list:
-                        expansion_list.append(b)
-                    _expand(b, expansion_list)
-
-        if max_photons > self.mode_count:
-            raise NotImplementedError("max_photons larger than the number of modes not supported currently")
+                    pattern_list.append(b)
+                    pattern_list.extend(_expand(b))
+            return pattern_list
 
         expansion = []
         for n in range(max_photons + 1):
-            a = [n]
-            a.extend([0] * (max_photons - 1))
+            a = [n] + [0] * (self.mode_count - 1)
             expansion.append(a)
-            _expand(a, expansion)
+            expansion.extend(_expand(a))
 
         return expansion
 
     def get_feature_vector(self, max_photons: int):
         orbits = self.get_all_orbits(max_photons)
-        feature_vector = []
-        for orbit in orbits:
-            prob = self.get_orbit_probability(orbit)
-            feature_vector.extend([prob])
+        feature_vector = [self.get_orbit_probability(orbit) for orbit in orbits]
 
         return feature_vector
