@@ -59,37 +59,44 @@ class GBSDevice:
 
         return prob
 
-    def get_all_orbits(self, max_photons: int):
+    def get_all_orbit_representatives(self, max_photons: int):
         """
         Generate a list of photon counting events, where each event is a representative of one orbit,
         in particular, the the representative where the number of photons are in descending order.
 
+        The function does this by first taking a pattern with all photons in the first mode,
+        then generates the other representatives by subtracting a photon from the first mode
+        and distributing to the other modes, keeping the descending order.
+
         :param max_photons: maximum number of registered photons in a counting event
         :return: a list of photon counting events. List[List]
         """
-        def _expand(pattern: List):
+        def _expand(pattern: List, start_index: int):
+            # :param start_index: the index from where to start distributing the photons in the first position
             if pattern[0] <= pattern[1]:
                 return []
             pattern_list = []
-            for i in range(1, len(pattern)):
+            index = start_index
+            for i in range(start_index, len(pattern)):
                 b = pattern.copy()
                 b[0] -= 1
                 if b[i] < b[i - 1]:
                     b[i] += 1
                     pattern_list.append(b)
-                    pattern_list.extend(_expand(b))
+                    pattern_list.extend(_expand(b, index))
+                    index += 1
             return pattern_list
 
         expansion = []
         for n in range(max_photons + 1):
             a = [n] + [0] * (self.mode_count - 1)
             expansion.append(a)
-            expansion.extend(_expand(a))
+            expansion.extend(_expand(a, 1))
 
         return expansion
 
     def get_feature_vector(self, max_photons: int):
-        orbits = self.get_all_orbits(max_photons)
+        orbits = self.get_all_orbit_representatives(max_photons)
         feature_vector = [self.get_orbit_probability(orbit) for orbit in orbits]
 
         return feature_vector
