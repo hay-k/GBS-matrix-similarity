@@ -10,9 +10,15 @@ import gbsapps.sample
 
 mols = ["H2", "LiH", "O2", "N2", "F2", "Ne2", "Ar2", "CO", "HCN", "HNC", "CH4", "H2O", "NH3", "BH3", "H2O2", "H2CO", "HCOOH", "CH3OH", "CH3CH2OH"]
 
+large_mols = ["Ne2"]
+
+not_present = ["Ar2", "CO"]
+
 
 def wrapper_get_single_two_body():
   for item in mols:
+    if item in large_mols or item in not_present:
+      continue
     a,b = get_single_two_body(item)
     print(str(item) + ': ' + str(get_adjacency_matrix(a, b)))
 
