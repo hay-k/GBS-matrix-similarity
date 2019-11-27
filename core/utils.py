@@ -8,6 +8,14 @@ from openfermion.utils import geometry_from_pubchem
 import gbsapps
 import gbsapps.sample
 
+mols = ["H2", "LiH", "O2", "N2", "F2", "Ne2", "Ar2", "CO", "HCN", "HNC", "CH4", "H2O", "NH3", "BH3", "H2O2", "H2CO", "HCOOH", "CH3OH", "CH3CH2OH"]
+
+
+def wrapper_get_single_two_body():
+  for item in mols:
+    a,b = get_single_two_body(item)
+    print(str(item) + ': ' + str(get_adjacency_matrix(a, b)))
+
 '''
 rounds the number in the argument if it is less than threshhold value.
 if num < thresh:
