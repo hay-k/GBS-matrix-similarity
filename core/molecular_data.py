@@ -4,6 +4,21 @@ from openfermion.utils import geometry_from_pubchem
 import numpy as np
 from core.utils import round_custom
 
+mols = ["H2", "LiH", "O2", "N2", "F2", "Ne2", "Ar2", "CO", "HCN", "HNC", "CH4", "H2O", "NH3", "BH3", "H2O2", "H2CO",
+        "HCOOH", "CH3OH", "CH3CH2OH"]
+
+large_mols = ["Ne2"]
+
+not_present = ["Ar2", "CO"]
+
+
+def wrapper_get_single_two_body():
+    for item in mols:
+        if item in large_mols or item in not_present:
+            continue
+        a, b = get_single_two_body(item)
+        print(str(item) + ': ' + str(get_adjacency_matrix(a, b)))
+
 
 def get_single_two_body_h2():
     """
@@ -28,6 +43,18 @@ def get_single_two_body(molecule_name, basis='sto-3g', multiplicity=1):
     _molecule = MolecularData(geometry, basis, multiplicity)
     _molecule = run_pyscf(_molecule)
     # TODO: save the molecule after running pyscf.
+    return _molecule.one_body_integrals, _molecule.two_body_integrals
+
+
+def get_single_two_body_file(molecule_file_name):
+    """
+    1. loads the molecule from the file.
+    2. This means we should write a function which saves the molecules into a file XXX: TODO
+    3.
+    """
+    _molecule = MolecularData(filename=molecule_file_name)
+    _molecule.load()
+    #    _molecule = run_pyscf(_molecule)
     return _molecule.one_body_integrals, _molecule.two_body_integrals
 
 
