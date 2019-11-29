@@ -20,7 +20,10 @@ def wrapper_get_single_two_body():
     if item in large_mols or item in not_present:
       continue
     a,b = get_single_two_body(item)
-    print(str(item) + ': ' + str(get_adjacency_matrix(a, b)))
+    adj_mat = get_adjacency_matrix(a, b)
+    print(str(item) + ': ' + str(adj_mat))
+    run_gbs(adj_mat, 2)
+    
 
 '''
 rounds the number in the argument if it is less than threshhold value.
