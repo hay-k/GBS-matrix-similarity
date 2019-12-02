@@ -19,6 +19,7 @@ if __name__ == '__main__':
 def test_molecule(mol, n_mean=5, max_photons=5):
     a,b = get_single_two_body(mol)
     adj_matrix = get_adjacency_matrix(a,b)
+    print('adjacency matrix: ' + str(mol) + ': ' + str(adj_matrix))
     molecule = GBSDevice(name=mol)
     molecule.encode_matrix(adj_matrix, n_mean)
     feature_vec = molecule.get_feature_vector(max_photons)
