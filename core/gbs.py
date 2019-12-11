@@ -2,6 +2,7 @@ import numpy as np
 from thewalrus import quantum
 from typing import List
 from itertools import permutations
+from sympy.utilities.iterables import multiset_permutations
 
 
 class GBSDevice:
@@ -48,10 +49,7 @@ class GBSDevice:
         :param pattern: a list of photon counts (per mode). One of the photon count events in the orbit
         :return: the probability of the given photon counting event
         """
-        def _unique_permutations():
-            return set(permutations(pattern))
-
-        perms = _unique_permutations()
+        perms = list(multiset_permutations(pattern))
         prob = 0
         for item in perms:
             prob += self.get_probability(item)
