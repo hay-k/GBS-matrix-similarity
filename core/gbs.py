@@ -24,8 +24,8 @@ class GBSDevice:
         :param n_mean: mean photon number in the device
         :return: nothing
         """
-        if self.mode_count and self.mode_count != 2 * len(matrix):
-            raise ValueError("There are not sufficient modes in the device to encode this matrix")
+        if self.mode_count and self.mode_count != len(matrix):
+            raise ValueError("The number of modes in the GBS device does not match the matrix dimension")
         Q = quantum.gen_Qmat_from_graph(matrix, n_mean=n_mean)
         self.cov = quantum.Covmat(Q)
         self.mode_count = len(matrix)
@@ -41,8 +41,7 @@ class GBSDevice:
         :param pattern: a list of photon counts (per mode)
         :return: the probability of the given photon counting event
         """
-        amp = quantum.pure_state_amplitude(np.zeros(2 * self.mode_count), self.cov, pattern)
-        return np.abs(amp) ** 2
+        return quantum.density_matrix_element(np.zeros(2 * self.mode_count), self.cov, pattern, pattern).real
 
     def get_orbit_probability(self, pattern: List[int]):
         """
