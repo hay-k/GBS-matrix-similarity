@@ -1,6 +1,28 @@
 import numpy as np
 
+mols = ["H2", "LiH", "O2", "N2", "F2", "Ne2", "Ar2", "CO", "HCN", "HNC", "CH4", "H2O", "NH3", "BH3", "H2O2", "H2CO", "HCOOH", "CH3OH", "CH3CH2OH"]
 
+large_mols = ["Ne2"]
+
+not_present = ["Ar2", "CO"]
+
+def wrapper_get_single_two_body():
+  for item in mols:
+    if item in large_mols or item in not_present:
+      continue
+    a,b = get_single_two_body(item)
+    adj_mat = get_adjacency_matrix(a, b)
+    print(str(item) + ': ' + str(adj_mat))
+    run_gbs(adj_mat, 2)
+    
+
+'''
+rounds the number in the argument if it is less than threshhold value.
+if num < thresh:
+    round(num)
+else
+    num
+'''
 def round_custom(num, thresh=0.0001):
     """
     rounds the number in the argument if it is less than threshold value.
