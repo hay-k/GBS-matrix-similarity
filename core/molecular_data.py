@@ -4,8 +4,7 @@ from openfermion.utils import geometry_from_pubchem
 import numpy as np
 from core.utils import round_custom
 
-mols = ["H2", "LiH", "O2", "N2", "F2", "Ne2", "Ar2", "CO", "HCN", "HNC", "CH4", "H2O", "NH3", "BH3", "H2O2", "H2CO",
-        "HCOOH", "CH3OH", "CH3CH2OH"]
+mols = ["H2", "LiH", "O2", "N2", "F2", "Ne2", "Ar2", "CO", "HCN", "HNC", "CH4", "H2O", "NH3", "BH3", "H2O2", "H2CO", "HCOOH", "CH3OH", "CH3CH2OH"]
 
 large_mols = ["Ne2"]
 
@@ -42,6 +41,7 @@ def get_single_two_body(molecule_name, basis='sto-3g', multiplicity=1):
     geometry = geometry_from_pubchem(molecule_name)
     _molecule = MolecularData(geometry, basis, multiplicity)
     _molecule = run_pyscf(_molecule)
+    _molecule.save()
     # TODO: save the molecule after running pyscf.
     return _molecule.one_body_integrals, _molecule.two_body_integrals
 
