@@ -1,19 +1,17 @@
 import numpy as np
 from thewalrus import quantum
+import strawberryfields as sf
 from typing import List
-from itertools import permutations
 from sympy.utilities.iterables import multiset_permutations
 
 
 class GBSDevice:
-    name: str
-    mode_count: int
-    cov: np.array
 
-    def __init__(self, name: str, mode_count: int = None):
+    def __init__(self, name: str):
         self.name = name
-        self.mode_count = mode_count
-        self.cov = np.array([[], []])
+        self.mode_count = None
+        self.state = None
+        self.n_mean = None
 
     def encode_matrix(self, matrix: np.array, n_mean: float):
         """
@@ -25,34 +23,64 @@ class GBSDevice:
         :param n_mean: mean photon number in the device
         :return: nothing
         """
-        if self.mode_count and self.mode_count != len(matrix):
-            raise ValueError("The number of modes in the GBS device does not match the matrix dimension")
-        Q = quantum.gen_Qmat_from_graph(matrix, n_mean=n_mean)
-        self.cov = quantum.Covmat(Q)
-        self.mode_count = len(matrix)
+        mode_count = len(matrix)
+        mean_photon_per_mode = n_mean / float(mode_count)
+        program = sf.Program(mode_count)
+        with program.context as q:
+            sf.ops.GraphEmbed(matrix, mean_photon_per_mode=mean_photon_per_mode) | q
+
+        eng = sf.LocalEngine(backend="gaussian")
+        result = eng.run(program)
+
+        self.mode_count = mode_count
+        self.n_mean = n_mean
+        self.state = result.state
 
     def get_state_vector(self):
-        return quantum.state_vector(np.zeros(2 * self.mode_count), self.cov)
+        return quantum.state_vector(self.state.means(),
+                                    self.state.cov())
 
     def get_density_matrix(self):
-        return quantum.density_matrix(np.zeros(2 * self.mode_count), self.cov)
+        return quantum.density_matrix(self.state.means(),
+                                      self.state.cov())
 
     def get_probability(self, pattern: List[int]):
         """
         :param pattern: a list of photon counts (per mode)
         :return: the probability of the given photon counting event
         """
-        return quantum.density_matrix_element(np.zeros(2 * self.mode_count), self.cov, pattern, pattern).real
+        photons = sum(pattern)
+        return self.state.fock_prob(pattern, cutoff=photons + 1)
 
-    def get_orbit_probability(self, pattern: List[int]):
+    def get_orbit_probability_exact(self, orbit: List[int]):
         """
-        :param pattern: a list of photon counts (per mode). One of the photon count events in the orbit
-        :return: the probability of the given photon counting event
+        :param orbit: a specification of an orbit
+        :return: the exact probability of the given orbit
         """
+        pattern = orbit + [0] * (self.mode_count - len(orbit))
         perms = list(multiset_permutations(pattern))
         prob = 0
         for item in perms:
             prob += self.get_probability(item)
+
+        return prob
+
+    def get_orbit_probability_mc(self, orbit: list, samples: int = 1000):
+        """
+        Calculate approximate probability of the orbit with Monte Carlo.
+        Similar to function sf.apps.similarity.prob_orbit_mc()
+
+        :param orbit: a specification of an orbit
+        :param samples: number of Monte Carlo samples
+        :return: the mc approximate probability of the given orbit
+        """
+        photons = sum(orbit)
+        prob = 0
+        for _ in range(samples):
+            sample = sf.apps.similarity.orbit_to_sample(orbit, self.mode_count)
+            prob += self.state.fock_prob(sample, cutoff=photons + 1)
+
+        prob = prob * sf.apps.similarity.orbit_cardinality(orbit, self.mode_count) / samples
 
         return prob
 
@@ -92,7 +120,7 @@ class GBSDevice:
 
         return expansion
 
-    def get_feature_vector(self, max_photons: int):
+    def get_feature_vector_exact(self, max_photons: int):
         orbits = self.get_all_orbit_representatives(max_photons)
         feature_vector = [self.get_orbit_probability(orbit) for orbit in orbits]
 
