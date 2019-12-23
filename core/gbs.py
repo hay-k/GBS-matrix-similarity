@@ -122,6 +122,6 @@ class GBSDevice:
 
     def get_feature_vector_exact(self, max_photons: int):
         orbits = self.get_all_orbit_representatives(max_photons)
-        feature_vector = [self.get_orbit_probability(orbit) for orbit in orbits]
+        feature_vector = [self.get_orbit_probability_exact(orbit) for orbit in orbits]
 
         return feature_vector
