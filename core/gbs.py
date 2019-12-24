@@ -65,13 +65,26 @@ class GBSDevice:
 
         return prob
 
+    def get_event_probability_exact(self, event: tuple):
+        """
+        :param event: a specification of an event. Tuple of length 2
+        :return: the exact probability of the given event
+        """
+        photons, max_photons_per_mode = event
+        prob = 0
+        for orbit in sf.apps.similarity.orbits(photons):
+            if max(orbit) <= max_photons_per_mode:
+                prob += self.get_orbit_probability_exact(orbit)
+
+        return prob
+
     def get_orbit_probability_mc(self, orbit: list, samples: int = 1000):
         """
         Calculate approximate probability of the orbit with Monte Carlo.
         Similar to function sf.apps.similarity.prob_orbit_mc()
 
         :param orbit: a specification of an orbit
-        :param samples: number of Monte Carlo samples
+        :param samples: number of Monte Carlo samples.
         :return: the mc approximate probability of the given orbit
         """
         photons = sum(orbit)
@@ -81,6 +94,26 @@ class GBSDevice:
             prob += self.state.fock_prob(sample, cutoff=photons + 1)
 
         prob = prob * sf.apps.similarity.orbit_cardinality(orbit, self.mode_count) / samples
+
+        return prob
+
+    def get_event_probability_mc(self, event: tuple, samples: int = 1000):
+        """
+        Calculate approximate probability of the event with Monte Carlo.
+        Similar to function sf.apps.similarity.prob_event_mc()
+
+        :param event: a specification of an event. Tuple of length 2
+        :param samples: number of Monte Carlo samples.
+        :return: the mc approximate probability of the given event
+        """
+        photons, max_photons_per_mode = event
+
+        prob = 0
+        for _ in range(samples):
+            sample = sf.apps.similarity.event_to_sample(photons, max_photons_per_mode, self.mode_count)
+            prob += self.state.fock_prob(sample, cutoff=photons + 1)
+
+        prob = prob * sf.apps.similarity.event_cardinality(photons, max_photons_per_mode, self.mode_count) / samples
 
         return prob
 
@@ -96,6 +129,7 @@ class GBSDevice:
         :param max_photons: maximum number of registered photons in a counting event
         :return: a list of photon counting events. List[List]
         """
+
         def _expand(pattern: List, start_index: int):
             # :param start_index: the index from where to start distributing the photons in the first position
             if pattern[0] <= pattern[1]:
@@ -120,8 +154,33 @@ class GBSDevice:
 
         return expansion
 
-    def get_feature_vector_exact(self, max_photons: int):
-        orbits = self.get_all_orbit_representatives(max_photons)
-        feature_vector = [self.get_orbit_probability_exact(orbit) for orbit in orbits]
+    def get_orbit_feature_vector(self, max_photons: int, mc=False):
+        """
+        Calculate and return a feature vector, based on orbit probabilities
 
-        return feature_vector
+        :param max_photons: max number of photons in a detection event
+        :param mc: if True, uses monte carlo simulation to. If False, calculates exact
+        :return: feature vector comprised of orbit probabilities
+        """
+        orbit_prob = self.get_orbit_probability_mc if mc else self.get_orbit_probability_exact
+
+        # For now, for mc=True case we use the default number of samples=1000,
+        # unless we come up with a better idea for the value of samples
+        return [orbit_prob(orbit)
+                for n in range(max_photons + 1)
+                for orbit in sf.apps.similarity.orbits(n)]
+
+    def get_event_feature_vector(self, max_photons: int, max_photons_per_mode, mc=False):
+        """
+        Calculate and return a feature vector, based on event probabilities
+
+        :param max_photons: max number of photons in a detection event
+        :param max_photons_per_mode: max number of photons per mode
+        :param mc: if True, uses monte carlo simulation to. If False, calculates exact
+        :return: feature vector comprised of event probabilities
+        """
+        event_prob = self.get_event_probability_mc if mc else self.get_event_probability_exact
+
+        # For now, for mc=True case we use the default number of samples=1000,
+        # unless we come up with a better idea for the value of samples
+        return [event_prob((photons, max_photons_per_mode)) for photons in range(max_photons + 1)]

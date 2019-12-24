@@ -1,4 +1,5 @@
 strawberryfields==0.12
 openfermion==0.10.0
 openfermionpyscf==0.4
+numpy
 sympy
