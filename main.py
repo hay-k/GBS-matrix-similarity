@@ -24,3 +24,10 @@ def test_molecule(mol, n_mean=5, max_photons=5):
     molecule.encode_matrix(adj_matrix, n_mean)
     feature_vec = molecule.get_feature_vector_exact(max_photons)
     return feature_vec
+
+def test_molecule_list(mol_list, n_mean=5, max_photons=5):
+    output = {}
+    for mol in mol_list:
+        output[mol] = test_molecule(mol, n_mean, max_photons)
+    return output
+        
