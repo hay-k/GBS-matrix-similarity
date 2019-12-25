@@ -9,11 +9,12 @@ class GBSDevice:
 
     def __init__(self, name: str):
         self.name = name
-        self.mode_count = None
-        self.state = None
-        self.n_mean = None
 
-    def encode_matrix(self, matrix: np.array, n_mean: float):
+        self.mode_count = None
+        self.cov = None  # covariance matrix
+        self.mu = None  # vector of means
+
+    def encode_matrix(self, matrix: np.array, n_mean: float, mu: np.array):
         """
         construct a covariance matrix out of the given matrix, and encode into the GBS device.
         If the device has self.mode_count == None at the time of this function call, then the mode count
@@ -21,36 +22,26 @@ class GBSDevice:
 
         :param matrix: the matrix to embed into the device
         :param n_mean: mean photon number in the device
+        :param mu: vector of means
         :return: nothing
         """
-        mode_count = len(matrix)
-        mean_photon_per_mode = n_mean / float(mode_count)
-        program = sf.Program(mode_count)
-        with program.context as q:
-            sf.ops.GraphEmbed(matrix, mean_photon_per_mode=mean_photon_per_mode) | q
-
-        eng = sf.LocalEngine(backend="gaussian")
-        result = eng.run(program)
-
-        self.mode_count = mode_count
-        self.n_mean = n_mean
-        self.state = result.state
+        Q = quantum.gen_Qmat_from_graph(matrix, n_mean=n_mean)
+        self.mode_count = len(matrix)
+        self.cov = quantum.Covmat(Q)
+        self.mu = mu
 
     def get_state_vector(self):
-        return quantum.state_vector(self.state.means(),
-                                    self.state.cov())
+        return quantum.state_vector(self.mu, self.cov)
 
-    def get_density_matrix(self):
-        return quantum.density_matrix(self.state.means(),
-                                      self.state.cov())
+    def get_density_matrix(self, cutoff = 5):
+        return quantum.density_matrix(self.mu, self.cov, cutoff=cutoff)
 
     def get_probability(self, pattern: List[int]):
         """
         :param pattern: a list of photon counts (per mode)
         :return: the probability of the given photon counting event
         """
-        photons = sum(pattern)
-        return self.state.fock_prob(pattern, cutoff=photons + 1)
+        return quantum.density_matrix_element(self.mu, self.cov, pattern, pattern).real
 
     def get_orbit_probability_exact(self, orbit: List[int]):
         """
@@ -87,11 +78,10 @@ class GBSDevice:
         :param samples: number of Monte Carlo samples.
         :return: the mc approximate probability of the given orbit
         """
-        photons = sum(orbit)
         prob = 0
         for _ in range(samples):
             sample = sf.apps.similarity.orbit_to_sample(orbit, self.mode_count)
-            prob += self.state.fock_prob(sample, cutoff=photons + 1)
+            prob += self.get_probability(sample)
 
         prob = prob * sf.apps.similarity.orbit_cardinality(orbit, self.mode_count) / samples
 
@@ -111,7 +101,7 @@ class GBSDevice:
         prob = 0
         for _ in range(samples):
             sample = sf.apps.similarity.event_to_sample(photons, max_photons_per_mode, self.mode_count)
-            prob += self.state.fock_prob(sample, cutoff=photons + 1)
+            prob += self.get_probability(sample)
 
         prob = prob * sf.apps.similarity.event_cardinality(photons, max_photons_per_mode, self.mode_count) / samples
 
