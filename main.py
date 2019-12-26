@@ -21,7 +21,8 @@ def test_molecule(mol, n_mean=5, max_photons=5):
     adj_matrix = get_adjacency_matrix(a,b)
     print('adjacency matrix: ' + str(mol) + ': ' + str(adj_matrix.shape) + ': ' + str(adj_matrix))
     molecule = GBSDevice(name=mol)
-    molecule.encode_matrix(adj_matrix, n_mean)
+    l, w = adj_matrix.shape
+    molecule.encode_matrix(adj_matrix, n_mean, np.zeros(2 * l))
     feature_vec = molecule.get_feature_vector_exact(max_photons)
     return feature_vec
 
