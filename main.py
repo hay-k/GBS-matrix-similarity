@@ -23,7 +23,7 @@ def test_molecule(mol, n_mean=5, max_photons=5):
     molecule = GBSDevice(name=mol)
     l, w = adj_matrix.shape
     molecule.encode_matrix(adj_matrix, n_mean, np.zeros(2 * l))
-    feature_vec = molecule.get_feature_vector_exact(max_photons)
+    feature_vec = molecule.get_orbit_feature_vector(max_photons)
     return feature_vec
 
 def test_molecule_list(mol_list, n_mean=5, max_photons=5):
