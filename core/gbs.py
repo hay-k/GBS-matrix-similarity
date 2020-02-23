@@ -3,6 +3,7 @@ from thewalrus import quantum
 import strawberryfields as sf
 from typing import List
 from sympy.utilities.iterables import multiset_permutations
+from functools import partial
 
 
 class GBSDevice:
@@ -144,33 +145,32 @@ class GBSDevice:
 
         return expansion
 
-    def get_orbit_feature_vector(self, max_photons: int, mc=False):
+    def get_orbit_feature_vector(self, max_photons: int, mc=False, samples: int = 1000):
         """
         Calculate and return a feature vector, based on orbit probabilities
 
         :param max_photons: max number of photons in a detection event
         :param mc: if True, uses monte carlo simulation to. If False, calculates exact
+        :param samples: number of samples for monte carlo simulation
         :return: feature vector comprised of orbit probabilities
         """
-        orbit_prob = self.get_orbit_probability_mc if mc else self.get_orbit_probability_exact
+        orbit_prob = partial(self.get_orbit_probability_mc, samples=samples) if mc else self.get_orbit_probability_exact
 
-        # For now, for mc=True case we use the default number of samples=1000,
-        # unless we come up with a better idea for the value of samples
         return [orbit_prob(orbit)
                 for n in range(max_photons + 1)
                 for orbit in sf.apps.similarity.orbits(n)]
 
-    def get_event_feature_vector(self, max_photons: int, max_photons_per_mode, mc=False):
+    def get_event_feature_vector(self, max_photons: int, max_photons_per_mode, mc=False, samples: int = 1000):
         """
         Calculate and return a feature vector, based on event probabilities
 
         :param max_photons: max number of photons in a detection event
         :param max_photons_per_mode: max number of photons per mode
         :param mc: if True, uses monte carlo simulation to. If False, calculates exact
+        :param samples: number of samples for monte carlo simulation
         :return: feature vector comprised of event probabilities
         """
-        event_prob = self.get_event_probability_mc if mc else self.get_event_probability_exact
+        event_prob = partial(self.get_event_probability_mc, samples=samples) if mc else self.get_event_probability_exact
 
-        # For now, for mc=True case we use the default number of samples=1000,
-        # unless we come up with a better idea for the value of samples
-        return [event_prob((photons, max_photons_per_mode)) for photons in range(max_photons + 1)]
+        return [event_prob((photons, max_photons_per_mode))
+                for photons in range(max_photons + 1)]
