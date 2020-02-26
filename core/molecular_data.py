@@ -59,7 +59,7 @@ def get_single_two_body(formula, source, basis='sto-3g', multiplicity=1):
     molecule = MolecularData(geometry, basis, multiplicity)
     molecule = run_pyscf(molecule)
 
-    # TODO: add proper functionality to save to a file, preferably with specifiable location adn filename.
+    # TODO: add proper functionality to save to a file, preferably with specifiable location and filename.
     # _molecule.save()
 
     return molecule.one_body_integrals, molecule.two_body_integrals
@@ -115,7 +115,7 @@ def get_molecular_matrix_and_vector(single_body, two_body):
     x, y = single_body.shape
     func = np.vectorize(round_custom)
     _new_dim = x * y
-    single_one_dim = single_body.reshape(_new_dim, 1)
+    single_one_dim = func(single_body.reshape(_new_dim, 1))
     two_body_two_dim = func(two_body.reshape(_new_dim, _new_dim))
 
     return single_one_dim, two_body_two_dim
