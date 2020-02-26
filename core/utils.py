@@ -1,4 +1,5 @@
 import numpy as np
+from core.gbs import GBSDevice
 
 
 def round_custom(num, threshold=0.0001):
@@ -15,7 +16,6 @@ def round_custom(num, threshold=0.0001):
 def calculate_similarity(mol1_adj, mol2_adj):
     """
     Calculates similarity between two matrices using hilbert-schmidt method.
-
     """
     diff = mol1_adj - mol2_adj
     diff_dot = np.dot(diff, np.transpose(np.conjugate(diff)))

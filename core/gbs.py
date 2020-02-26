@@ -1,6 +1,6 @@
 import numpy as np
 from thewalrus import quantum
-import strawberryfields as sf
+import strawberryfields.apps.similarity as sfs
 from typing import List
 from sympy.utilities.iterables import multiset_permutations
 from functools import partial
@@ -64,7 +64,7 @@ class GBSDevice:
         """
         photons, max_photons_per_mode = event
         prob = 0
-        for orbit in sf.apps.similarity.orbits(photons):
+        for orbit in sfs.orbits(photons):
             if max(orbit) <= max_photons_per_mode:
                 prob += self.get_orbit_probability_exact(orbit)
 
@@ -73,7 +73,7 @@ class GBSDevice:
     def get_orbit_probability_mc(self, orbit: list, samples: int = 1000):
         """
         Calculate approximate probability of the orbit with Monte Carlo.
-        Similar to function sf.apps.similarity.prob_orbit_mc()
+        Similar to function sfs.prob_orbit_mc()
 
         :param orbit: a specification of an orbit
         :param samples: number of Monte Carlo samples.
@@ -81,17 +81,17 @@ class GBSDevice:
         """
         prob = 0
         for _ in range(samples):
-            sample = sf.apps.similarity.orbit_to_sample(orbit, self.mode_count)
+            sample = sfs.orbit_to_sample(orbit, self.mode_count)
             prob += self.get_probability(sample)
 
-        prob = prob * sf.apps.similarity.orbit_cardinality(orbit, self.mode_count) / samples
+        prob = prob * sfs.orbit_cardinality(orbit, self.mode_count) / samples
 
         return prob
 
     def get_event_probability_mc(self, event: tuple, samples: int = 1000):
         """
         Calculate approximate probability of the event with Monte Carlo.
-        Similar to function sf.apps.similarity.prob_event_mc()
+        Similar to function sfs.prob_event_mc()
 
         :param event: a specification of an event. Tuple of length 2
         :param samples: number of Monte Carlo samples.
@@ -101,10 +101,10 @@ class GBSDevice:
 
         prob = 0
         for _ in range(samples):
-            sample = sf.apps.similarity.event_to_sample(photons, max_photons_per_mode, self.mode_count)
+            sample = sfs.event_to_sample(photons, max_photons_per_mode, self.mode_count)
             prob += self.get_probability(sample)
 
-        prob = prob * sf.apps.similarity.event_cardinality(photons, max_photons_per_mode, self.mode_count) / samples
+        prob = prob * sfs.event_cardinality(photons, max_photons_per_mode, self.mode_count) / samples
 
         return prob
 
@@ -158,7 +158,7 @@ class GBSDevice:
 
         return [orbit_prob(orbit)
                 for n in range(max_photons + 1)
-                for orbit in sf.apps.similarity.orbits(n)]
+                for orbit in sfs.orbits(n)]
 
     def get_event_feature_vector(self, max_photons: int, max_photons_per_mode, mc=False, samples: int = 1000):
         """
