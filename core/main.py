@@ -19,26 +19,19 @@ def get_probabilities_mc(formula_list, source, n_mean, group_type, groups, sampl
             get_probability_func = molecule.get_orbit_probability_mc
         else:
             get_probability_func = molecule.get_event_probability_mc
+
         probs = [(group, get_probability_func(group, samples=samples)) for group in groups]
 
         with open(output_file, 'a') as file:
-            file.write("{}: {}\n".format(formula, probs))
+            file.write("{} (n_mean = {}): {}\n".format(formula, n_mean, probs))
 
 
 if __name__ == '__main__':
-    molecules = ['H2', 'H2']
-    source = 'nist'
-    n_mean = 5
-    group_type = 'event'
-    events = [(2, 1), (3, 1)]
-    samples = 1000
-    filename = "../results/event_probabilities.txt"
-
-    get_probabilities_mc(molecules,
-                         source,
-                         n_mean,
-                         group_type,
-                         events,
-                         samples,
-                         filename)
-
+    get_probabilities_mc(formula_list=['H2', 'H2O', 'HCl', 'LiH', 'NaH', 'KH', 'LiOH', 'NaOH', 'KOH'],
+                         source='nist',
+                         n_mean=7,
+                         group_type='orbit',
+                         groups=[[1], [2], [3], [4], [5], [6], [7], [8], [9], [10]],
+                         samples=10000,
+                         output_file='../results/orbit_probabilities.txt',
+                         append=False)
