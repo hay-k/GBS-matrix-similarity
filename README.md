@@ -1,7 +1,7 @@
 # GBS-matrix-similarity
 Xanadu's [StrawberryFields](https://github.com/XanaduAI/strawberryfields) provides a functionality to use Gaussian Boson Sampling (GBS) to measure similarity between graphs [1].
 
-This repository provides a bit different implementation of the similarity functionality in StrawberryFields to provide a few
+This repository provides a bit different implementation of the similarity functionality in StrawberryFields to provide more flexibility:
 1. GBS-matrix-similarity uses `thewalrus` library directly and avoids the overhead of embedding a matrix into a GBS device.
 2. GBS-matrix-similarity allows the embedding of arbitrary symmetric matrices, not only adjacency matrices of non-weighted graphs.
 3. GBS-matrix-similarity optionally allows embedding of diagonal terms into the vector of means.
