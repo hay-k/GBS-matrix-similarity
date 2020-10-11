@@ -2,7 +2,7 @@ from functools import partial
 from numpy import ones, mean, std
 from math import factorial
 from itertools import permutations
-from core.gbs import GBSDevice
+from core.gbs_device import GBSDevice
 import unittest
 import timeit
 

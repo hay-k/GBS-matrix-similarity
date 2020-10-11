@@ -1,4 +1,4 @@
-from core.gbs import GBSDevice
+from core.gbs_device import GBSDevice
 import core.molecular_data as md
 import numpy as np
 import os

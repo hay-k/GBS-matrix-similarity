@@ -1,5 +1,4 @@
 import numpy as np
-from core.gbs import GBSDevice
 
 
 def round_custom(num, threshold=0.0001):
